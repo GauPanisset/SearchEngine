@@ -1,7 +1,7 @@
 const Express = require('express');
 const router = Express.Router();
 
-const DB = require('../db.js');
+const DB = require('../database/db.js');
 
 router.get('/', (req, res, next) => {
     DB.all('SELECT * FROM IndexTable', (err, data) => {

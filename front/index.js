@@ -1,6 +1,8 @@
+//stop list contenant quelques des mots vides.
 const stopList = ["un", "une", "le", "la", "avec", "sans", "qui", "que"];
 
 function removeAccents(string){
+    //Fonction permettant d'enlever les accents.
     let res = string.split('');
     const accents    = "ÀÁÂÃÄÅàáâãäåÒÓÔÕÕÖØòóôõöøÈÉÊËèéêëðÇçÐÌÍÎÏìíîïÙÚÛÜùúûüÑñŠšŸÿýŽž";
     const accentsOut = "AAAAAAaaaaaaOOOOOOOooooooEEEEeeeeeCcDIIIIiiiiUUUUuuuuNnSsYyyZz";
@@ -14,6 +16,7 @@ function removeAccents(string){
 }
 
 function levenshtein(string1, string2){
+    //Fonction permettant d'évaluer la distance de Levenshtein.
     const len1 = string1.length;
     const len2 = string2.length;
 
@@ -43,10 +46,11 @@ function levenshtein(string1, string2){
 }
 
 function getKeywords(){
+    //Fonction qui extrait les mots clé de la requête
     $(".card-columns").empty();
     const request = $("#request").val();
     const words = request.split(" ");
-    let keywords = new Map();
+    let keywords = new Map();                   //Contient les distance de levenshtein associées à de potentiels mots clé.
     let cleanRequest = [];                      //cleanRequest[i][0] : Label du i-ième mot clé.
                                                 //cleanRequest[i][1] : Type du i-ième mot clé.
     for (let i = 0; i < words.length; i++){
@@ -54,20 +58,20 @@ function getKeywords(){
     }
     console.log(words);
     $.ajax({
-        url: "http://localhost:3030/index/",
+        url: "http://localhost:3030/index/",        //On récupère l'ensemble des mots de l'index pour les comparer à ceux de la requête utilisateur.
         method: "GET",
         dataType: "json",
         error: (error) => {
             console.log(error);
         },
         success: (data) => {
-            let used_type = new Map();
-            let used_word = [];
+            let used_type = new Map();          //Variables nécessaires dans la constitution d'une requête "propre" probable à partir de celle de l'utilisateur.
+            let used_word = [];                 //Ces variables permettent de retenir si un attribut ou un mot a déjà utilisé. En effet, pour une requête propre on ne peut pas utiliser deux fois le même mot d'origine et on ne peut pas avoir deux fois un attribut du même type.
             for(let i = 0; i < words.length; i++) {
                 if (!stopList.includes(words[i])) {
                     for (let j = 0; j < data.length; j++) {
-                        const leven = levenshtein(words[i], data[j]["Word"]);
-                        if (Math.trunc(words[i].length / 2) >= leven) {
+                        const leven = levenshtein(words[i], data[j]["Word"]);       //On calcule la distance de Levenshtein entre chaque mot de la requête qui n'est pas un mot vide (stopList) et chaque mot de l'index.
+                        if (Math.trunc(words[i].length / 2) >= leven) {             //Condition sur l'acceptation d'une distance.
                             used_type.set(data[j]["Attribute"], 0);
                             if (keywords.get(leven) === undefined) {
                                 keywords.set(leven, [[i, data[j]["Word"], data[j]["Attribute"]]]);
@@ -82,7 +86,7 @@ function getKeywords(){
                                             //keywords.get(i)[j][1] = Etiquette du j-ième mot clé dont l'indice de levenshtein est i.
                                             //keywords.get(i)[j][2] = Type du j-ième mot clé dont l'indice de levenshtein est i.
             const leven_max = Math.max(...keywords.keys());
-            for (let i = 0; i <= leven_max; i ++) {
+            for (let i = 0; i <= leven_max; i ++) {             //Constitution de la requête propre. On sélectionne les mots avec la distance de levenshtein la plus basse, puis on complète.
                 if (keywords.get(i) !== undefined) {
                     for (let j = 0; j < keywords.get(i).length; j++) {
                         if (used_word[keywords.get(i)[j][0]] === undefined && used_type.get(keywords.get(i)[j][2]) === 0) {
@@ -93,7 +97,7 @@ function getKeywords(){
                     }
                 }
             }
-                                    //============= AFFICHAGE ALPHA =============
+                                    //============= AFFICHAGE ALPHA DES MOTS CLE=============
 
             console.log(cleanRequest);
             const bgColor = ["red", "green", "blue", "yellow", "purple", "orange"];
@@ -105,7 +109,7 @@ function getKeywords(){
             <span class="badge" style="background-color:${bgColor[i%color.length]}; color:${color[i%color.length]}">${cleanRequest[i][0]}</span>
             `)
             }
-                                    //============= AFFICHAGE ALPHA =============
+                                    //============= AFFICHAGE ALPHA DES MOTS CLE=============
             getProduct(cleanRequest);
         }
     });
@@ -114,7 +118,8 @@ function getKeywords(){
 window.getKeywords = getKeywords;
 
 function displayProducts(products, max){
-    let score = new Map();
+    //Fonction permettant d'afficher les produits.
+    let score = new Map();                          //On calcule les scores de chaque produit sélectionné. Plus ils ont d'attributs dans les mots clé, plus leur score est élevé.
     for (let i = 0; i < products.length; i++) {
         if (score.get(products[i]) === undefined) {
             score.set(products[i], 1);
@@ -125,7 +130,7 @@ function displayProducts(products, max){
     console.log(score);
     const bgColor = ["#87CEFA", "#00BFFF", "#1E90FF", "#2C75FF", "#0000FF", "#00008B"];
     const color = ["black", "black", "black", "black", "black", "white"];
-    for (let k = max; k > 0; k--) {
+    for (let k = max; k > 0; k--) {                         //On affiche en premier les produits au meilleur score.
         for (let [product, value] of score) {
             if(value === k){
                 $.ajax({
@@ -155,7 +160,8 @@ function displayProducts(products, max){
 }
 
 function getProduct(keywords){
-    let products = [];
+    //Fonction permettant de sélectionner les produits correspondants aux mots clé.
+    let products = []; //Liste des identifiants produit qui possède au moins un attribut dans les mots clé.
     for (let i = 0; i < keywords.length; i ++) {
         $.ajax({
             url: "http://localhost:3030/index/selection/" + keywords[i][0].toString() + "/" + keywords[i][1].toString(),
