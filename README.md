@@ -17,7 +17,7 @@ Le but de ce moteur de recherche est d'obtenir une liste de produits qui figuren
 
 La réponse à cette requête doit être le plus pertinente possible, c'est pourquoi ce moteur de recherche repose sur les différents éléments présentés ci-après.
 
-#### 1) Indexation des données.
+### 1) Indexation des données.
 
 L'index est la base du moteur de recherche. Il y figure l'ensemble des mots clés qui décrivent les produits présent dans la base de données. Par exemple une *assiette bleue en carton d'une marque X* est représentée de la façon suivante :
 
@@ -47,7 +47,7 @@ L'indexation s'effectue lors du démarrage du serveur. Chaque produit est extrai
 
 ___
 
-#### 2) Traitement de la requête.
+### 2) Traitement de la requête.
 
 Un des enjeux majeur du moteur de recherche est de permettre à l'utilisateur de ne pas écrire rigoureusement les mots clé indexés dans sa requête. Par exemple une faute d'orthographe ne doit pas être gênant. De même écrire *métallique* doit bien retourner les objets en "métal". Enfin, les mots vides ("un", "une", "dans", ...) ne doivent pas interférer.
 
@@ -66,12 +66,19 @@ En suite, on calcule la [distance de Levenshtein](https://fr.wikipedia.org/wiki/
 
 A l'issue de cette étape on a donc un dictionnaire portant associant à une valeur de distance de Levenshtein un tableau de mots clé probable avec leur position dans la *requête d'origine* et leur *type* (i.e. l'attribut correspondant au mot. Exemple `{1 => [[0, 'assiette', 'Object'], [1, 'jaune', 'Color']], 3 => [[3, 'porcelaine', 'Material']]}`).
 
-**LIMITE :** Des méthodes d'optimisation peuvent encore être mis en place. L'algorithme n'a pas montré de faille lors des tests, mais il n'est pas prouvé qu'il fonctionne pour toutes les requêtes. De plus, en cas de non fonctionnement l'utilisateur n'aurait pas de feedback.
+Si ce dictionnaire est vide, on invite l'utilisateur à reformuler sa requête.
+
+**LIMITES :**
+* Des méthodes d'optimisation peuvent encore être mis en place.
+* L'algorithme n'a pas montré de faille lors des tests, mais il n'est pas prouvé qu'il fonctionne pour toutes les requêtes.
+* Comme on compare avec le contenu de l'index, l'utilisateur peut demander un objet qui pourrait exister mais qui ne figure simplement pas dans la base de données. Si c'est le cas, il devrait être prévenu.
+* Ajout des opérateurs booléens (OU, ET, ...)
+
 <br>
 
 ___
 
-#### 3) Confection de la requête plus probable.
+### 3) Confection de la requête plus probable.
 
 Il faut donc maintenant réécrire la *requête initiale* avec les mots clé extraits. Cette nouvelle requête doit être la plus proche possible de celle de l'utilisateur. On va donc observer chaque mot clé et ne sélectionner que ceux qui reconstituent de façon le plus probable la *requête de l'utilisateur*.
 
@@ -86,14 +93,15 @@ L'idée est de sélectionner les mots clés dont la distance de Levenshtein est 
 * Une requête ne peut pas utiliser le même mot d'origine deux fois. Ainsi une *requête initiale* composée de 2 mots, ne pourra pas avoir plus de 2 mots dans la nouvelle requête et le premier mot ne sera sélectionné qu'une fois, même si le traitement de la *requête* aboutit à plus d'un mot clé associé à celui-ci.
 * Une requête ne peut pas être composée de deux mots clé renvoyant vers le même attribut. Ainsi si deux mots différents dans la *requête initiale* sont traduits par un mot clé associé au même attribut, alors seul l'un d'entre eux sera sélectionné.
 
-On affiche les mots clés dans le navigateur pour que l'utilisateur puisse les voir.
+On affiche les mots clés dans le navigateur pour que l'utilisateur puisse les voir. Les mots clé secondaires qui n'ont pas été retenus pour composer la requête finale sont également affichés, pour que l'utilisateur puisse les sélectionner afin de compléter sa recherche. Il peut également ôter des mots clé primaires afin de rafiner la requête finale.
 
-**LIMITE :** L'utilisateur devrait pouvoir influencer cette requête *a posteriori*.
+**LIMITE :** On pourrait également envisager que certains type de mots comptent plus (par exemple le type d'objet).
+
 <br>
 
 ___
 
-#### 4) Recherche en base de données.
+### 4) Recherche en base de données.
 
 Une fois la requête plus probable extraite, il faut trouver les produits qui correspondent dans la base de données.
 
@@ -110,11 +118,12 @@ pour se faire.
 On stocke l'ensemble des identifiants de produit dans une liste, même s'ils apparaissent plusieurs fois.
 
 **LIMITE :** ...
+
 <br>
 
 ___
 
-#### 5) Choix des résultats.
+### 5) Choix des résultats.
 
 A partir de la liste précédemment obtenue, il faut déterminer les produits qui vont être affichés pour l'utilisateur
 et l'ordre dans lequel ils vont apparaîtrent.
@@ -130,6 +139,7 @@ On affiche enfin les produits dans l'ordre des scores décroissants. Le produit 
 requête se trouve donc en premier.
 
 **LIMITE :** ...
+
 <br>
 
 ___
