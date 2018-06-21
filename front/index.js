@@ -1,6 +1,10 @@
 //stop list contenant quelques des mots vides.
 const stopList = ["un", "une", "le", "la", "avec", "sans", "qui", "que"];
 
+let cleanRequest = [];                      //cleanRequest[i][0] : Label du i-ième mot clé.
+                                            //cleanRequest[i][1] : Type du i-ième mot clé.
+let secondaryRequest = [];
+
 function removeAccents(string){
     //Fonction permettant d'enlever les accents.
     let res = string.split('');
@@ -45,14 +49,57 @@ function levenshtein(string1, string2){
     return res[len1][len2];
 }
 
+function up(index) {
+    $(`#${secondaryRequest[index][0]}`).remove();
+    const removed = secondaryRequest.splice(index, 1)[0];
+    cleanRequest.push(removed);
+    displayKeywords()
+
+}
+
+function down(index) {
+    $(`#${cleanRequest[index][0]}`).remove();
+    const removed = cleanRequest.splice(index, 1)[0];
+    secondaryRequest.push(removed);
+    displayKeywords()
+
+}
+
+function displayKeywords() {
+    const bgColor = ["red", "green", "blue", "yellow", "purple", "orange"];
+    const color = ["white", "white", "white", "black", "white", "black"]
+    $("#keyword-container").empty();
+    $("#secondary-container").empty();
+    for (let i = 0; i < cleanRequest.length; i++) {
+        $("#keyword-container").append(`
+                <button type="button" class="btn" id="${cleanRequest[i][0]}" style="background-color:${bgColor[i%color.length]}; color:${color[i%color.length]}" onclick="down('${i}')">${cleanRequest[i][0]}</button>
+                `);
+    }
+    if (secondaryRequest.length > 0) {
+        $("#secondary-container").append(`
+                <p>Vous cherchiez peut-être plutôt :</p>
+                `);
+        for (let i = 0; i < secondaryRequest.length; i++) {
+            $("#secondary-container").append(`
+                    <button type="button" class="btn" id="${secondaryRequest[i][0]}" style="background-color:grey; color:white" onclick="up('${i}')">${secondaryRequest[i][0]}</button>
+                    `);
+        }
+    }
+    if (cleanRequest.length === 0) {
+        $("#keyword-container").append(`
+            <span class="badge badge-warning">Nous n'avons pas ce type de produit. Veuillez modifier votre requête.</span>
+            `);
+    }
+    getProduct();
+}
+
 function getKeywords(){
     //Fonction qui extrait les mots clé de la requête
-    $(".card-columns").empty();
+    cleanRequest = [];
+    secondaryRequest = [];
     const request = $("#request").val();
     const words = request.split(" ");
     let keywords = new Map();                   //Contient les distance de levenshtein associées à de potentiels mots clé.
-    let cleanRequest = [];                      //cleanRequest[i][0] : Label du i-ième mot clé.
-                                                //cleanRequest[i][1] : Type du i-ième mot clé.
     for (let i = 0; i < words.length; i++){
         words[i] = removeAccents(words[i]).toLowerCase();
     }
@@ -93,32 +140,24 @@ function getKeywords(){
                             used_word[keywords.get(i)[j][0]] = 1;
                             used_type.set(keywords.get(i)[j][2], 1);
                             cleanRequest.push([keywords.get(i)[j][1], keywords.get(i)[j][2]]);
+                        } else {
+                            secondaryRequest.push([keywords.get(i)[j][1], keywords.get(i)[j][2]]);
                         }
                     }
                 }
             }
-                                    //============= AFFICHAGE ALPHA DES MOTS CLE=============
-
             console.log(cleanRequest);
-            const bgColor = ["red", "green", "blue", "yellow", "purple", "orange"];
-            const color = ["white", "white", "white", "black", "white", "black"]
-            $("#badge-container").empty();
-            for (let i = 0; i < cleanRequest.length; i++) {
-                if (cleanRequest[i] !== undefined)
-                $("#badge-container").append(`
-            <span class="badge" style="background-color:${bgColor[i%color.length]}; color:${color[i%color.length]}">${cleanRequest[i][0]}</span>
-            `)
-            }
-                                    //============= AFFICHAGE ALPHA DES MOTS CLE=============
-            getProduct(cleanRequest);
+            console.log(secondaryRequest);
+            displayKeywords();
         }
     });
 }
 
 window.getKeywords = getKeywords;
 
-function displayProducts(products, max){
+function displayProducts(products){
     //Fonction permettant d'afficher les produits.
+    $(".card-columns").empty();
     let score = new Map();                          //On calcule les scores de chaque produit sélectionné. Plus ils ont d'attributs dans les mots clé, plus leur score est élevé.
     for (let i = 0; i < products.length; i++) {
         if (score.get(products[i]) === undefined) {
@@ -130,7 +169,7 @@ function displayProducts(products, max){
     console.log(score);
     const bgColor = ["#87CEFA", "#00BFFF", "#1E90FF", "#2C75FF", "#0000FF", "#00008B"];
     const color = ["black", "black", "black", "black", "black", "white"];
-    for (let k = max; k > 0; k--) {                         //On affiche en premier les produits au meilleur score.
+    for (let k = cleanRequest.length; k > 0; k--) {                         //On affiche en premier les produits au meilleur score.
         for (let [product, value] of score) {
             if(value === k){
                 $.ajax({
@@ -159,12 +198,12 @@ function displayProducts(products, max){
 
 }
 
-function getProduct(keywords){
+function getProduct(){
     //Fonction permettant de sélectionner les produits correspondants aux mots clé.
     let products = []; //Liste des identifiants produit qui possède au moins un attribut dans les mots clé.
-    for (let i = 0; i < keywords.length; i ++) {
+    for (let i = 0; i < cleanRequest.length; i ++) {
         $.ajax({
-            url: "http://localhost:3030/index/selection/" + keywords[i][0].toString() + "/" + keywords[i][1].toString(),
+            url: "http://localhost:3030/index/selection/" + cleanRequest[i][0].toString() + "/" + cleanRequest[i][1].toString(),
             method: "GET",
             dataType: "json",
             error: (error) => {
@@ -174,9 +213,9 @@ function getProduct(keywords){
                 for (let j = 0; j < data.length; j++) {
                     products.push(data[j]["Id"]);
                 }
-                if(i === keywords.length - 1) {
+                if(i === cleanRequest.length - 1) {
                     console.log(products);
-                    displayProducts(products, keywords.length)
+                    displayProducts(products)
                 }
             }
         });
