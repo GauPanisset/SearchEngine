@@ -1,0 +1,9 @@
+# Mac
+.DS_STORE
+
+# NodeJS
+node_modules
+npm-debug.log
+
+# WebStorm
+.idea
