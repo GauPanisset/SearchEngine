@@ -65,7 +65,6 @@ if(!Fs.existsSync(`./database/${DB_NAME}`)){
     DB.exec(init);
 }
 
-
 let productsPromise = new Promise((resolve, reject) => {
     DB.all("SELECT * FROM Product", (err, data) => {
         if (err) {
@@ -82,3 +81,4 @@ productsPromise.then((val) => {
 });
 
 module.exports = DB;
+

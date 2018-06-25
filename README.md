@@ -45,8 +45,6 @@ L'indexation s'effectue lors du démarrage du serveur. Chaque produit est extrai
 
 <br>
 
-___
-
 ### 2) Traitement de la requête.
 
 Un des enjeux majeur du moteur de recherche est de permettre à l'utilisateur de ne pas écrire rigoureusement les mots clé indexés dans sa requête. Par exemple une faute d'orthographe ne doit pas être gênant. De même écrire *métallique* doit bien retourner les objets en "métal". Enfin, les mots vides ("un", "une", "dans", ...) ne doivent pas interférer.
@@ -76,8 +74,6 @@ Si ce dictionnaire est vide, on invite l'utilisateur à reformuler sa requête.
 
 <br>
 
-___
-
 ### 3) Confection de la requête plus probable.
 
 Il faut donc maintenant réécrire la *requête initiale* avec les mots clé extraits. Cette nouvelle requête doit être la plus proche possible de celle de l'utilisateur. On va donc observer chaque mot clé et ne sélectionner que ceux qui reconstituent de façon le plus probable la *requête de l'utilisateur*.
@@ -99,8 +95,6 @@ On affiche les mots clés dans le navigateur pour que l'utilisateur puisse les v
 
 <br>
 
-___
-
 ### 4) Recherche en base de données.
 
 Une fois la requête plus probable extraite, il faut trouver les produits qui correspondent dans la base de données.
@@ -121,8 +115,6 @@ On stocke l'ensemble des identifiants de produit dans une liste, même s'ils app
 
 <br>
 
-___
-
 ### 5) Choix des résultats.
 
 A partir de la liste précédemment obtenue, il faut déterminer les produits qui vont être affichés pour l'utilisateur
@@ -141,7 +133,5 @@ requête se trouve donc en premier.
 **LIMITE :** ...
 
 <br>
-
-___
 
 L'ensemble du code est commenté en français.

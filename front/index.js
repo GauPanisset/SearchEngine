@@ -1,5 +1,7 @@
-//stop list contenant quelques des mots vides.
+//stop list contenant quelques mots vides.
 const stopList = ["un", "une", "le", "la", "avec", "sans", "qui", "que"];
+//List des opérateurs booléens reconnus.
+const opBool = ["et", "ou"];
 
 let cleanRequest = [];                      //cleanRequest[i][0] : Label du i-ième mot clé.
                                             //cleanRequest[i][1] : Type du i-ième mot clé.
@@ -50,6 +52,7 @@ function levenshtein(string1, string2){
 }
 
 function up(index) {
+    //Fonction permettant de transformer un mot clé secondaire en mot clé primaire.
     $(`#${secondaryRequest[index][0]}`).remove();
     const removed = secondaryRequest.splice(index, 1)[0];
     cleanRequest.push(removed);
@@ -58,6 +61,7 @@ function up(index) {
 }
 
 function down(index) {
+    //Fonction permettant de transformer un mot clé primaire en mot clé secondaire.
     $(`#${cleanRequest[index][0]}`).remove();
     const removed = cleanRequest.splice(index, 1)[0];
     secondaryRequest.push(removed);
@@ -66,6 +70,7 @@ function down(index) {
 }
 
 function displayKeywords() {
+    //Fonction permettant l'affichage des mots clé primaires et secondaires.
     const bgColor = ["red", "green", "blue", "yellow", "purple", "orange"];
     const color = ["white", "white", "white", "black", "white", "black"]
     $("#keyword-container").empty();
@@ -103,7 +108,6 @@ function getKeywords(){
     for (let i = 0; i < words.length; i++){
         words[i] = removeAccents(words[i]).toLowerCase();
     }
-    console.log(words);
     $.ajax({
         url: "http://localhost:3030/index/",        //On récupère l'ensemble des mots de l'index pour les comparer à ceux de la requête utilisateur.
         method: "GET",
@@ -114,16 +118,27 @@ function getKeywords(){
         success: (data) => {
             let used_type = new Map();          //Variables nécessaires dans la constitution d'une requête "propre" probable à partir de celle de l'utilisateur.
             let used_word = [];                 //Ces variables permettent de retenir si un attribut ou un mot a déjà utilisé. En effet, pour une requête propre on ne peut pas utiliser deux fois le même mot d'origine et on ne peut pas avoir deux fois un attribut du même type.
+            let isBoolean = false;
             for(let i = 0; i < words.length; i++) {
                 if (!stopList.includes(words[i])) {
-                    for (let j = 0; j < data.length; j++) {
-                        const leven = levenshtein(words[i], data[j]["Word"]);       //On calcule la distance de Levenshtein entre chaque mot de la requête qui n'est pas un mot vide (stopList) et chaque mot de l'index.
-                        if (Math.trunc(words[i].length / 2) >= leven) {             //Condition sur l'acceptation d'une distance.
-                            used_type.set(data[j]["Attribute"], 0);
-                            if (keywords.get(leven) === undefined) {
-                                keywords.set(leven, [[i, data[j]["Word"], data[j]["Attribute"]]]);
-                            } else {
-                                keywords.get(leven).push([i, data[j]["Word"], data[j]["Attribute"]]);
+                    if (opBool.includes(words[i])) {
+                        isBoolean = true;
+                    } else {
+                        for (let j = 0; j < data.length; j++) {
+                            const leven = levenshtein(words[i], data[j]["Word"]);       //On calcule la distance de Levenshtein entre chaque mot de la requête qui n'est pas un mot vide (stopList) et chaque mot de l'index.
+                            if (Math.trunc(words[i].length / 2) >= leven) {             //Condition sur l'acceptation d'une distance.
+                                if (used_type.get(data[j]["Attribute"]) === undefined) {
+                                    used_type.set(data[j]["Attribute"], 1);
+                                }
+                                if (isBoolean) {
+                                    used_type.set(data[j]["Attribute"], used_type.get(data[j]["Attribute"]) + 1);
+                                    isBoolean = false;
+                                }
+                                if (keywords.get(leven) === undefined) {
+                                    keywords.set(leven, [[i, data[j]["Word"], data[j]["Attribute"]]]);
+                                } else {
+                                    keywords.get(leven).push([i, data[j]["Word"], data[j]["Attribute"]]);
+                                }
                             }
                         }
                     }
@@ -136,9 +151,10 @@ function getKeywords(){
             for (let i = 0; i <= leven_max; i ++) {             //Constitution de la requête propre. On sélectionne les mots avec la distance de levenshtein la plus basse, puis on complète.
                 if (keywords.get(i) !== undefined) {
                     for (let j = 0; j < keywords.get(i).length; j++) {
-                        if (used_word[keywords.get(i)[j][0]] === undefined && used_type.get(keywords.get(i)[j][2]) === 0) {
+                        console.log(used_type, used_word);
+                        if (used_word[keywords.get(i)[j][0]] === undefined && used_type.get(keywords.get(i)[j][2]) > 0) {
                             used_word[keywords.get(i)[j][0]] = 1;
-                            used_type.set(keywords.get(i)[j][2], 1);
+                            used_type.set(keywords.get(i)[j][2], used_type.get(keywords.get(i)[j][2]) - 1);
                             cleanRequest.push([keywords.get(i)[j][1], keywords.get(i)[j][2]]);
                         } else {
                             secondaryRequest.push([keywords.get(i)[j][1], keywords.get(i)[j][2]]);
@@ -146,8 +162,6 @@ function getKeywords(){
                     }
                 }
             }
-            console.log(cleanRequest);
-            console.log(secondaryRequest);
             displayKeywords();
         }
     });
@@ -166,7 +180,6 @@ function displayProducts(products){
             score.set(products[i], score.get(products[i]) + 1);
         }
     }
-    console.log(score);
     const bgColor = ["#87CEFA", "#00BFFF", "#1E90FF", "#2C75FF", "#0000FF", "#00008B"];
     const color = ["black", "black", "black", "black", "black", "white"];
     for (let k = cleanRequest.length; k > 0; k--) {                         //On affiche en premier les produits au meilleur score.
@@ -214,7 +227,6 @@ function getProduct(){
                     products.push(data[j]["Id"]);
                 }
                 if(i === cleanRequest.length - 1) {
-                    console.log(products);
                     displayProducts(products)
                 }
             }
