@@ -8,7 +8,7 @@
 ## Pour tester
 
 * Charger les modules : `npm install`
-* Lancer le serveur : `node index.js`
+* Lancer le serveur : `node init.js`
 * Ouvrir la page web dans un navigateur : par défaut double clic sur le fichier `.html`
 
 ## Comment ça marche ?
@@ -51,7 +51,7 @@ Un des enjeux majeur du moteur de recherche est de permettre à l'utilisateur de
 
 Il faut donc traiter la requête de l'utilisateur pour extraire les mots clé utiles à la recherche.
 
-Le code permettant d'extraire les mots clé se trouve dans `front/index.js`.
+Le code permettant d'extraire les mots clé se trouve dans `front/init.js`.
 
 <br>
 
@@ -78,7 +78,7 @@ Si ce dictionnaire est vide, on invite l'utilisateur à reformuler sa requête.
 
 Il faut donc maintenant réécrire la *requête initiale* avec les mots clé extraits. Cette nouvelle requête doit être la plus proche possible de celle de l'utilisateur. On va donc observer chaque mot clé et ne sélectionner que ceux qui reconstituent de façon le plus probable la *requête de l'utilisateur*.
 
-Le code permettant de confectionner la requête plus probable se trouve dans `front/index.js`.
+Le code permettant de confectionner la requête plus probable se trouve dans `front/init.js`.
 
 <br>
 
@@ -99,7 +99,7 @@ On affiche les mots clés dans le navigateur pour que l'utilisateur puisse les v
 
 Une fois la requête plus probable extraite, il faut trouver les produits qui correspondent dans la base de données.
 
-Le code permettant de faire cette recherche se trouve dans `front/index.js` et dans `routes/produits.js`.
+Le code permettant de faire cette recherche se trouve dans `front/init.js` et dans `routes/produits.js`.
 
 <br>
 
@@ -120,7 +120,7 @@ On stocke l'ensemble des identifiants de produit dans une liste, même s'ils app
 A partir de la liste précédemment obtenue, il faut déterminer les produits qui vont être affichés pour l'utilisateur
 et l'ordre dans lequel ils vont apparaîtrent.
 
-Le code permettant de faire ce choix se trouve dans `front/index.js`.
+Le code permettant de faire ce choix se trouve dans `front/init.js`.
 
 ___
 **21/06 :**

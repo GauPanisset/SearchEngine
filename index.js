@@ -1,6 +1,7 @@
 const Express = require('express');
 const BP = require('body-parser');
 
+
 const app = Express();
 
 app.use(BP.json());
@@ -12,7 +13,6 @@ app.use(function(req, res, next) {
 });
 
 app.use('/product', require('./routes/product.js').router);
-app.use('/index', require('./routes/index.js').router);
 
 app.listen(3030, (err) => {
 
