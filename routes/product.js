@@ -3,10 +3,19 @@ const router = Express.Router();
 
 const Elastic = require('../elasticsearch/init.js');
 
+const stopWords = ['alors', 'au', 'aucuns', 'aussi', 'autre', 'avant', 'avec', 'avoir', 'bon', 'car', 'ce', 'cela', 'ces', 'ceux', 'chaque', 'ci', 'comme', 'comment', 'dans', 'des', 'du', 'dedans', 'dehors', 'depuis', 'devrait', 'doit', 'donc', 'dos', 'debut', 'elle', 'elles', 'en', 'encore', 'essai', 'est', 'et', 'eu', 'fait', 'faites', 'fois', 'font', 'hors', 'ici', 'il', 'ils', 'je', 'juste', 'la', 'le', 'les', 'leur', 'la', 'ma', 'maintenant', 'mais', 'mes', 'mine', 'moins', 'mon', 'mot', 'meme', 'ni', 'nommes', 'notre', 'nous', 'ou', 'ou', 'par', 'parce', 'pas', 'peut', 'peu', 'plupart', 'pour', 'pourquoi', 'quand', 'que', 'quel', 'quelle', 'quelles', 'quels', 'qui', 'sa', 'sans', 'ses', 'seulement', 'si', 'sien', 'son', 'sont', 'sous', 'soyez', 'sujet', 'sur', 'ta', 'tandis', 'tellement', 'tels', 'tes', 'ton', 'tous', 'tout', 'trop', 'tres', 'tu', 'voient', 'vont', 'votre', 'vous', 'vu', 'ca', 'etaient', 'etat', 'etions', 'ete', 'etre'];
 
 router.get('/:keywords', (req, res) => {
    //Traitement de la requête
-    let request = req.params.keywords.replace('&', ' ');
+    let data = req.params.keywords.split('&');
+    let request = [];
+    data.forEach((word) => {
+        console.log(word);
+        if(!stopWords.includes(word)) {
+            request.push(word);
+        }
+    });
+    request = request.join(' ');
     console.log(request);
     let body = {
         size: 30,
@@ -14,11 +23,39 @@ router.get('/:keywords', (req, res) => {
         query: {
             multi_match: {
                 query: request,
-                fields: ['Cate', 'Cate2', 'Text1', 'Text2']
+                fields: ['Arg1', 'Arg2', 'Arg3', 'Arg4'],
+                minimum_should_match: request.split(" ").length,
+                fuzziness: 1,
             }
+        },
+        suggest: {
+            text : request,
+            suggestion1 : {
+                term : {
+                    field : "Arg1"
+                },
+            },
+            suggestion2 : {
+                term : {
+                    field : "Arg2"
+                },
+            },
+            suggestion3 : {
+                term : {
+                    field : "Arg3"
+                },
+            },
+            suggestion4 : {
+                term : {
+                    field : "Arg4"
+                },
+
+            },
         },
         explain: 'true'
     };
+
+
 
     Elastic.search('index', body)
         .then(results => {
@@ -26,10 +63,10 @@ router.get('/:keywords', (req, res) => {
             console.log(`returned:`);
             results.hits.hits.forEach(
                 (hit, index) => console.log(
-                    `\t${body.from + ++index} | ${hit._source.Id} | ${hit._source.Cate} | ${hit._source.Cate2} | ${hit._source.Text1} | ${hit._source.Text2}`
+                    `\t${body.from + ++index} | ${hit._source.Id} | ${hit._source.Arg1} | ${hit._source.Arg2} | ${hit._source.Arg3} | ${hit._source.Arg4}`
                 )
             );
-            return res.json(results.hits.hits);
+            return res.json(results.suggest);
         })
         .catch(console.error);
 });

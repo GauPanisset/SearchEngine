@@ -46,7 +46,7 @@ function indices(){
 }
 
 let dataPromise = new Promise((resolve, reject) => {
-    DB.query("SELECT cat_article.art_idtart AS Id, cat_souscategorie.sct_lib AS Cate, cat_souscategorie2.sc2_lib AS Cate2, cat_article.art_lib AS Text1, cat_article.art_tit AS Text2 FROM cat_article INNER JOIN cat_souscategorie ON cat_souscategorie.sct_idtsct = cat_article.art_idtsct INNER JOIN cat_souscategorie2 ON cat_souscategorie2.sc2_idtsc2 = cat_article.art_idtsc2", (err, data) => {
+    DB.query("SELECT cat_article.art_idtart AS Id, cat_souscategorie.sct_lib AS Arg1, cat_souscategorie2.sc2_lib AS Arg2, cat_article.art_lib AS Arg3, cat_article.art_tit AS Arg4 FROM cat_article INNER JOIN cat_souscategorie ON cat_souscategorie.sct_idtsct = cat_article.art_idtsct INNER JOIN cat_souscategorie2 ON cat_souscategorie2.sc2_idtsc2 = cat_article.art_idtsc2", (err, data) => {
         if (err) {
             reject(err);
         }
@@ -65,3 +65,4 @@ dataPromise.then((data) => {
 
 module.exports.search = search;
 module.exports.indices = indices;
+
