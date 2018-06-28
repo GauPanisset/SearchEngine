@@ -8,10 +8,26 @@
 <body>
 <div class="input-group mb-3" style="margin: 50px; width: 90%">
     <div class="input-group-prepend">
-        <button class="btn btn-outline-secondary" type="button" onclick="getProducts()">Chercher</button>
+        <button class="btn btn-outline-secondary" type="button" onclick="getProducts(true)">Chercher</button>
     </div>
     <input type="text" class="form-control" id="request" placeholder="Que cherchez vous ?" aria-label="" aria-describedby="basic-addon1">
 </div>
+<form>
+    <div class="form-group" style="margin: 50px; width: 90%">
+        <label for="formControlRange">Nombre d'articles à afficher :</label>
+        <span id="valueRange" style=""></span>
+        <input min="1" max="100" type="range" class="form-control-range" id="formControlRange" value="10">
+        <script>
+            let slideCol = document.getElementById("formControlRange");
+            let y = document.getElementById("valueRange");
+            y.innerHTML = slideCol.value;
+
+            slideCol.oninput = function() {
+                y.innerHTML = this.value;
+            }
+        </script>
+    </div>
+</form>
 <div id="keyword-container" style="margin: 50px; width: 90%">
 </div>
 <div id="secondary-container" style="margin: 50px; width: 90%">
